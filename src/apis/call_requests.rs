@@ -1,3 +1,4 @@
+use crate::apis::constants::*;
 use crate::models::general::llm::{ChatCompletion, Message};
 use dotenv::dotenv;
 use reqwest::{
@@ -11,11 +12,9 @@ pub async fn call_gpt(messages: Vec<Message>) {
     dotenv().ok();
 
     let api_key: String =
-        env::var("OPEN_AI_KEY").expect("OPEN_AI_KEY not found among environment variables");
+        env::var(ENV_OPENAI_API_KEY).expect("OPEN_AI_KEY not found among environment variables");
     let api_org: String =
-        env::var("OPEN_AI_ORG").expect("OPEN_AI_ORG not found among environment variables");
-
-    let url: &str = "https://api.openai.com/v1/chat/completions";
+        env::var(ENV_OPENAI_API_ORG).expect("OPEN_AI_ORG not found among environment variables");
 
     // Create API key header
     let mut headers = HeaderMap::new();
@@ -38,7 +37,7 @@ pub async fn call_gpt(messages: Vec<Message>) {
     };
 
     let response_raw = client
-        .post(url)
+        .post(OPENAI_API_URL)
         .json(&chat_completion)
         .send()
         .await
