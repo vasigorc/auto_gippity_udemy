@@ -16,3 +16,6 @@ webbrowser = "0.8.9"
 strum = "0.24.1"
 strum_macros = "0.24.3"
 ai_functions_vasile = "0.1.0"
+
+[features]
+openai-coverage = []

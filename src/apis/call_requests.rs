@@ -1,4 +1,4 @@
-use crate::models::general::llm::Message;
+use crate::models::general::llm::{ChatCompletion, Message};
 use dotenv::dotenv;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -6,21 +6,21 @@ use reqwest::{
 };
 use std::env;
 
-pub async fn call_gpt(message: Vec<Message>) {
+pub async fn call_gpt(messages: Vec<Message>) {
     // enables us to get information from our envvars
     dotenv().ok();
 
     let api_key: String =
-        env::var("OPEN_API_KEY").expect("OPEN_API_KEY not found among environment variables");
+        env::var("OPEN_AI_KEY").expect("OPEN_AI_KEY not found among environment variables");
     let api_org: String =
-        env::var("OPEN_API_ORG").expect("OPEN_API_ORG not found among environment variables");
+        env::var("OPEN_AI_ORG").expect("OPEN_AI_ORG not found among environment variables");
 
-    let url: &str = "https://api.openapi.com/v1/chat/completions";
+    let url: &str = "https://api.openai.com/v1/chat/completions";
 
     // Create API key header
     let mut headers = HeaderMap::new();
     headers.insert(
-        "authorization",
+        "Authorization",
         HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
     );
     headers.insert(
@@ -30,4 +30,35 @@ pub async fn call_gpt(message: Vec<Message>) {
 
     // Create client
     let client = Client::builder().default_headers(headers).build().unwrap();
+
+    let chat_completion = ChatCompletion {
+        model: "gpt-4".to_string(),
+        messages,
+        temperature: 0.1,
+    };
+
+    let response_raw = client
+        .post(url)
+        .json(&chat_completion)
+        .send()
+        .await
+        .unwrap();
+
+    dbg!(response_raw.text().await.unwrap());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore] // ran once and ignoring after to avoid incurring costs
+    async fn test_call_to_openai() {
+        let message = Message {
+            role: "user".to_string(),
+            content: "Hi there, this is a test. Give me a brief response.".to_string(),
+        };
+
+        call_gpt(vec![message]).await;
+    }
 }
