@@ -13,3 +13,19 @@ pub struct ChatCompletion {
     // randomness of the output: between 0 and 1. Where 0 is not random at all
     pub temperature: f32,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct APIMessage {
+    pub content: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct APIChoice {
+    #[serde(rename="message")]
+    pub api_message: APIMessage,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct APIResponse {
+    pub choices: Vec<APIChoice>,
+}
