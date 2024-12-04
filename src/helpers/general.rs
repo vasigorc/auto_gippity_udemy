@@ -1,6 +1,10 @@
 use std::fmt::format;
 
-use crate::models::general::llm::Message;
+use reqwest::Response;
+
+use crate::{apis::call_requests::call_gpt, models::general::llm::Message};
+
+use super::command_line::PrintCommand;
 
 // encourage certain specific output
 pub fn extend_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
@@ -22,6 +26,32 @@ pub fn extend_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -
     }
 }
 
+// Perform call to LLM GPT
+
+pub async fn ai_task_request(
+    msg_context: String,
+    agent_position: &str,
+    agent_operation: &str,
+    function_passed: for<'a> fn(&'a str) -> &'static str,
+) -> String {
+    // Extend AI function
+    let extended_message = extend_ai_function(function_passed, &msg_context);
+
+    // Print current status
+    PrintCommand::AICall.print_agent_message(agent_position, agent_operation);
+
+    // Attempt first call
+    match call_gpt(vec![extended_message.clone()]).await {
+        Ok(response) => response,
+        Err(_) => {
+            // Retry if the first call fails
+            call_gpt(vec![extended_message])
+                .await
+                .expect("Failed to call OpenAI twice")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -31,5 +61,21 @@ mod tests {
     fn test_extending_ai_function() {
         let extended_msg = extend_ai_function(convert_user_input_to_goal, "dummy variable");
         assert_eq!(extended_msg.role, "system".to_string());
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "openai-coverage")]
+    async fn test_ai_task_request() {
+        let ai_func_param = "Build me a webserver for making stock price api requests".to_string();
+
+        let result = ai_task_request(
+            ai_func_param,
+            "Managing agent",
+            "Defining user requirements",
+            convert_user_input_to_goal,
+        )
+        .await;
+
+        assert!(result.len() > 20);
     }
 }
