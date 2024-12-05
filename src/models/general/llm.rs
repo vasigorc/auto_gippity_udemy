@@ -21,7 +21,7 @@ pub struct APIMessage {
 
 #[derive(Debug, Deserialize)]
 pub struct APIChoice {
-    #[serde(rename="message")]
+    #[serde(rename = "message")]
     pub api_message: APIMessage,
 }
 

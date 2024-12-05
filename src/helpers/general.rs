@@ -1,6 +1,7 @@
 use std::fmt::format;
 
 use reqwest::Response;
+use serde::{de::DeserializeOwned, Deserialize};
 
 use crate::{apis::call_requests::call_gpt, models::general::llm::Message};
 
@@ -50,6 +51,25 @@ pub async fn ai_task_request(
                 .expect("Failed to call OpenAI twice")
         }
     }
+}
+
+pub async fn ai_task_request_decoded<T: DeserializeOwned>(
+    msg_context: String,
+    agent_position: &str,
+    agent_operation: &str,
+    function_passed: for<'a> fn(&'a str) -> &'static str,
+) -> T {
+    let llm_response = ai_task_request(
+        msg_context,
+        agent_position,
+        agent_operation,
+        function_passed,
+    )
+    .await;
+
+    let decoded_response: T = serde_json::from_str(llm_response.as_str())
+        .expect("Failed to decode AI response from serde_json");
+    decoded_response
 }
 
 #[cfg(test)]
