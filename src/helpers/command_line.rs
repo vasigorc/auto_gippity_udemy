@@ -1,9 +1,18 @@
-use std::io::{stdin, stdout, Stdout};
+use std::{
+    fs,
+    io::{stdin, stdout, Stdout},
+};
 
 use crossterm::{
     style::{Color, ResetColor, SetForegroundColor},
     ExecutableCommand,
 };
+
+const CODE_TEMPLATE_PATH: &str =
+    "/home/vasilegorcinschi/repos/web_template_autogpt/src/code_template.rs";
+const EXEC_MAIN_PATH: &str = "/home/vasilegorcinschi/repos/web_template_autogpt/src/main.rs";
+const API_SCHEMA_PATH: &str =
+    "/home/vasilegorcinschi/repos/auto_gippity_udemy/schemas/api_schema.json";
 
 #[derive(PartialEq, Debug)]
 pub enum PrintCommand {
@@ -46,6 +55,20 @@ pub fn get_user_response(question: &str) -> String {
         .read_line(&mut user_response)
         .expect("Failed to read response");
     user_response.trim().to_string()
+}
+
+// Get code template and provide it as a single string to ChatGPT
+pub fn read_code_template_contents() -> String {
+    fs::read_to_string(CODE_TEMPLATE_PATH).expect("Error reading code template")
+}
+
+// Save new backend code
+pub fn save_backend_code(contents: &String) {
+    fs::write(EXEC_MAIN_PATH, contents).expect("Error writing backend code")
+}
+// Save JSON API Endpoint Schema
+pub fn save_api_endpoints(api_endpoints: &String) {
+    fs::write(API_SCHEMA_PATH, api_endpoints).expect("Failed to write API endpoints to file")
 }
 
 #[cfg(test)]
