@@ -10,4 +10,21 @@ This project consists of three agents, performing different tasks:
 
 Agents can call LLMs (Large Language Models) and get back some results.
 
-This program takes user input from command line
+This program takes user input from command line.
+
+## Agents
+
+All agents have an underlying `BasicAgent` that describes their behaviour. Managing agent holds
+_fact sheets_ - information that agents need in order to process the task at hand.
+
+## Fact sheet
+
+This holds the following information:
+
+|        Fact         |        Owner        |
+| :-----------------: | :-----------------: |
+| Project description |   Project manager   |
+|    Project scope    | Solutions architect |
+|    External urls    | Solutions architect |
+|    Backedn code     |  Backend developer  |
+| API Endpoint schema |  Backend developer  |
