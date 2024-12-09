@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use crate::models::agent_basic::basic_agent::BasicAgent;
@@ -27,9 +28,8 @@ pub struct FactSheet {
     pub api_endpoint_schema: Vec<RouteObject>,
 }
 
-// uncomment the line below if async_trait is not natively supported by Rust yet
-// #[async_trait]
-pub trait SpecifalFunctions: Debug {
+#[async_trait]
+pub trait SpecifalFunctions: std::fmt::Debug {
     // Used by the manager to get agents' attributes
     fn get_attributes_from_agent(&self) -> &BasicAgent;
 
