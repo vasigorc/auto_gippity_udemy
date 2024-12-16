@@ -17,6 +17,10 @@ This program takes user input from command line.
 All agents have an underlying `BasicAgent` that describes their behaviour. Managing agent holds
 _fact sheets_ - information that agents need in order to process the task at hand.
 
+Please check the diagram below to see the relationship between three agents:
+
+![Agents diagram](images/agents_relationship.png)
+
 ## Fact sheet
 
 This holds the following information:

@@ -6,7 +6,7 @@ use super::basic_traits::BasicTraits;
 pub enum AgentState {
     Discovering,
     Working,
-    UnitTesting,
+    Validation,
     Finished,
 }
 

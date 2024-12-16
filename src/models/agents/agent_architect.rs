@@ -1,9 +1,15 @@
+use std::time::Duration;
+
 use crate::{
     ai_functions::aifunc_architect::{print_project_scope, print_site_urls},
-    helpers::general::ai_task_request_decoded,
+    helpers::{
+        command_line::PrintCommand,
+        general::{ai_task_request_decoded, check_status_code},
+    },
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
 use async_trait::async_trait;
+use reqwest::Client;
 
 use super::agent_traits::{FactSheet, ProjectScope, SpecifalFunctions};
 
@@ -60,7 +66,7 @@ impl AgentSolutionArchitect {
         .await;
 
         fact_sheet.external_urls = ai_response;
-        self.attributes.state = AgentState::UnitTesting;
+        self.attributes.state = AgentState::Validation;
     }
 }
 
@@ -84,13 +90,83 @@ impl SpecifalFunctions for AgentSolutionArchitect {
                             fact_sheet.project_description.clone(),
                         )
                         .await;
-                        self.attributes.state = AgentState::UnitTesting;
+                        self.attributes.state = AgentState::Validation;
                     }
                 }
-                AgentState::UnitTesting => self.attributes.state = AgentState::Finished,
+                AgentState::Validation => {
+                    let mut exclude_urls: Vec<String> = vec![];
+                    let client = Client::builder()
+                        .timeout(Duration::from_secs(5))
+                        .build()
+                        .unwrap();
+
+                    // Find faulty urls
+                    let urls: &Vec<String> = fact_sheet.external_urls.as_ref();
+
+                    for url in urls {
+                        let endpoint_str = format!("Testing URL endpoint: {}", url);
+                        PrintCommand::UnitTest.print_agent_message(
+                            self.attributes.position.as_str(),
+                            endpoint_str.as_str(),
+                        );
+
+                        // Perform the actual URL test
+                        match check_status_code(&client, url).await {
+                            Ok(status_code) => {
+                                if status_code != 200 {
+                                    exclude_urls.push(url.clone());
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Error checking {}: {}", url, e);
+                            }
+                        }
+                    }
+
+                    if !exclude_urls.is_empty() {
+                        let new_urls: Vec<String> = fact_sheet
+                            .external_urls
+                            .iter()
+                            .filter(|url| !exclude_urls.contains(url))
+                            .cloned()
+                            .collect();
+                        fact_sheet.external_urls = new_urls;
+                    }
+                    self.attributes.state = AgentState::Finished;
+                }
                 _ => self.attributes.state = AgentState::Finished,
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[cfg(feature = "openai-coverage")]
+    async fn test_soltuion_architect() {
+        let mut agent = AgentSolutionArchitect::new();
+
+        let mut dummy_factsheet = FactSheet {
+            project_description:
+                "Build a full stack website with user login that shows latest Forex prices"
+                    .to_string(),
+            project_scope: None,
+            external_urls: vec![],
+            backend_code: None,
+            api_endpoint_schema: vec![],
+        };
+
+        agent
+            .execute(&mut dummy_factsheet)
+            .await
+            .expect("Unable to execute Solutions Arhitect Agent");
+
+        assert!(dummy_factsheet.project_scope.is_some());
+        assert!(!dummy_factsheet.external_urls.is_empty());
+        dbg!(agent);
     }
 }
