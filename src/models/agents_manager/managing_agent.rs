@@ -3,7 +3,10 @@ use crate::{
     helpers::general::ai_task_request,
     models::{
         agent_basic::basic_agent::{AgentState, BasicAgent},
-        agents::agent_traits::{FactSheet, SpecifalFunctions},
+        agents::{
+            agent_architect::AgentSolutionArchitect,
+            agent_traits::{FactSheet, SpecifalFunctions},
+        },
     },
 };
 
@@ -46,5 +49,44 @@ impl ManagingAgent {
             fact_sheet,
             agents,
         })
+    }
+
+    fn add_agent(&mut self, agent: Box<dyn SpecifalFunctions>) {
+        self.agents.push(agent);
+    }
+
+    fn create_agents(&mut self) {
+        self.add_agent(Box::new(AgentSolutionArchitect::new()));
+    }
+
+    pub async fn execute_project(&mut self) {
+        self.create_agents();
+
+        for agent in &mut self.agents {
+            let agent_response = agent.execute(&mut self.fact_sheet).await;
+
+            let agent_info = agent.get_attributes_from_agent();
+            dbg!(agent_info);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[cfg(feature = "openai-coverage")]
+    async fn test_managing_agent() {
+        let user_request: &str = r#"I need a full-stack app that fetches and tracks my fitness 
+          progress. It needs to include timezone info from the web."#;
+
+        let mut managing_agent = ManagingAgent::new(user_request.to_string())
+            .await
+            .expect("Error creating Managing Agent");
+
+        managing_agent.execute_project().await;
+
+        dbg!(managing_agent.fact_sheet);
     }
 }
