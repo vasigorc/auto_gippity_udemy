@@ -8,9 +8,9 @@ use crossterm::{
     ExecutableCommand,
 };
 
-const CODE_TEMPLATE_PATH: &str =
+pub const CODE_TEMPLATE_PATH: &str =
     "/home/vasilegorcinschi/repos/web_template_autogpt/src/code_template.rs";
-const EXEC_MAIN_PATH: &str = "/home/vasilegorcinschi/repos/web_template_autogpt/src/main.rs";
+pub const EXEC_MAIN_PATH: &str = "/home/vasilegorcinschi/repos/web_template_autogpt/src/main.rs";
 const API_SCHEMA_PATH: &str =
     "/home/vasilegorcinschi/repos/auto_gippity_udemy/schemas/api_schema.json";
 
@@ -58,8 +58,8 @@ pub fn get_user_response(question: &str) -> String {
 }
 
 // Get code template and provide it as a single string to ChatGPT
-pub fn read_code_template_contents() -> String {
-    fs::read_to_string(CODE_TEMPLATE_PATH).expect("Error reading code template")
+pub fn read_template_contents(template_path: &str) -> String {
+    fs::read_to_string(template_path).expect("Error reading code template")
 }
 
 // Save new backend code

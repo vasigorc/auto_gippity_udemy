@@ -1,7 +1,5 @@
-use std::fmt::format;
-
-use reqwest::{Client, Response};
-use serde::{de::DeserializeOwned, Deserialize};
+use reqwest::Client;
+use serde::de::DeserializeOwned;
 
 use crate::{apis::call_requests::call_gpt, models::general::llm::Message};
 

@@ -35,18 +35,6 @@ impl AgentSolutionArchitect {
         Self { attributes }
     }
 
-    // let msg_context = format!(
-    //     "CODE TEMPLATE: {:?}\n PROJECT DESCRIPTION: {:?}\n",
-    //     fact_sheet.backend_code, fact_sheet
-    // );
-
-    // let ai_response: String = ai_task_request_decoded(
-    //     msg_context,
-    //     &self.attributes.position,
-    //     get_function_string!(print_improved_webserver_code),
-    //     print_improved_webserver_code,
-    // )
-    // .await;
     // Retrieve project scope
     async fn call_project_scope(&mut self, fact_sheet: &mut FactSheet) -> ProjectScope {
         let msg_context = fact_sheet.project_description.to_string();
