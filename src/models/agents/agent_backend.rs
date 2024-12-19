@@ -9,7 +9,7 @@ use crate::{
         command_line::{
             read_template_contents, save_backend_code, CODE_TEMPLATE_PATH, EXEC_MAIN_PATH,
         },
-        general::ai_task_request_decoded,
+        general::{ai_task_request, ai_task_request_decoded},
     },
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
@@ -49,7 +49,7 @@ impl AgentBackendDeveloper {
             code_template_string, fact_sheet.project_description
         );
 
-        let ai_response: String = ai_task_request_decoded(
+        let ai_response: String = ai_task_request(
             msg_context,
             &self.attributes.position,
             get_function_string!(print_backend_webserver_code),
@@ -65,11 +65,11 @@ impl AgentBackendDeveloper {
 
     async fn call_improved_backend_code(&mut self, fact_sheet: &mut FactSheet) {
         let msg_context = format!(
-            "CODE TEMPLATE: {:?}\n PROJECT DESCRIPTION: {:?}\n",
+            "CODE TEMPLATE: {:?}\n PROJECT_DESCRIPTION: {:?}\n",
             fact_sheet.backend_code, fact_sheet
         );
 
-        let ai_response: String = ai_task_request_decoded(
+        let ai_response: String = ai_task_request(
             msg_context,
             &self.attributes.position,
             get_function_string!(print_improved_webserver_code),
@@ -155,5 +155,38 @@ impl SpecifalFunctions for AgentBackendDeveloper {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[cfg(feature = "openai-coverage")]
+    async fn test_writing_backend_code() {
+        let mut agent = AgentBackendDeveloper::new();
+        let factsheet_string: &str = r#"
+      {
+        "project_description": "build a website that fetches and tracks fitness progress with timezone information",
+        "project_scope": {
+          "is_crud_required": true,
+          "is_user_login_and_logout": true,
+          "is_external_urls_required": true
+        },
+        "external_urls": [
+          "http://worldtimeapi.org/api/timezone"
+        ],
+        "backend_code": null,
+        "api_endpoint_schema": []
+      }"#;
+
+        let mut fact_sheet: FactSheet = serde_json::from_str(factsheet_string).unwrap();
+
+        agent.attributes.state = AgentState::Discovering;
+        agent
+            .execute(&mut fact_sheet)
+            .await
+            .expect("Failed to execut Backend Developer agent");
     }
 }
