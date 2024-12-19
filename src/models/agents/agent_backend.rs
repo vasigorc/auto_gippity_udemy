@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::{
     ai_functions::aifunc_backend::{
         print_backend_webserver_code, print_fixed_code, print_improved_webserver_code,
@@ -12,7 +14,7 @@ use crate::{
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
 
-use super::agent_traits::FactSheet;
+use super::agent_traits::{FactSheet, SpecifalFunctions};
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -116,5 +118,42 @@ impl AgentBackendDeveloper {
         )
         .await;
         ai_response
+    }
+}
+
+#[async_trait]
+impl SpecifalFunctions for AgentBackendDeveloper {
+    fn get_attributes_from_agent(&self) -> &BasicAgent {
+        &self.attributes
+    }
+
+    async fn execute(
+        &mut self,
+        fact_sheet: &mut FactSheet,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        while self.attributes.state != AgentState::Finished {
+            match self.attributes.state {
+                AgentState::Discovering => {
+                    self.call_initial_backend_code(fact_sheet).await;
+                    self.attributes.state = AgentState::Working;
+                    continue;
+                }
+                AgentState::Working => {
+                    if self.bug_count == 0 {
+                        self.call_improved_backend_code(fact_sheet).await;
+                    } else {
+                        self.call_fix_code_bugs(fact_sheet).await;
+                    }
+                    self.attributes.state = AgentState::Validation;
+                    continue;
+                }
+                AgentState::Validation => {
+                    // Temporary solution before properly implementing the Validation branch
+                    self.attributes.state = AgentState::Finished;
+                }
+                _ => self.attributes.state = AgentState::Finished,
+            }
+        }
+        Ok(())
     }
 }
