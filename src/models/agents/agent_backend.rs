@@ -7,7 +7,8 @@ use crate::{
     },
     helpers::{
         command_line::{
-            read_template_contents, save_backend_code, CODE_TEMPLATE_PATH, EXEC_MAIN_PATH,
+            is_code_safe, read_template_contents, save_backend_code, PrintCommand,
+            CODE_TEMPLATE_PATH, EXEC_MAIN_PATH,
         },
         general::{ai_task_request, ai_task_request_decoded},
     },
@@ -148,7 +149,16 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                     continue;
                 }
                 AgentState::Validation => {
-                    // Temporary solution before properly implementing the Validation branch
+                    // Guard: ensure AI safety
+                    PrintCommand::UnitTest.print_agent_message(
+                        self.attributes.position.as_str(),
+                        "Backend Code Unit Testing: Requesting user input",
+                    );
+
+                    if !is_code_safe() {
+                        println!("Exeting because AI generated code was deemed not safe.");
+                    }
+
                     self.attributes.state = AgentState::Finished;
                 }
                 _ => self.attributes.state = AgentState::Finished,

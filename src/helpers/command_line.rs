@@ -71,6 +71,42 @@ pub fn save_api_endpoints(api_endpoints: &String) {
     fs::write(API_SCHEMA_PATH, api_endpoints).expect("Failed to write API endpoints to file")
 }
 
+// Our flow involves allowing AI to execute code on our machine
+// This can potentially harmful for any host running this
+// As a safety measure we will want to review any code before allowing
+// to execute it
+pub fn is_code_safe() -> bool {
+    let mut stdout = stdout();
+
+    loop {
+        stdout.execute(SetForegroundColor(Color::Blue)).unwrap();
+        println!("\nWARNING: You are about to run code written entirely by AI");
+        println!("Review the code and confirm that you wish to continue");
+
+        stdout.execute(SetForegroundColor(Color::Green)).unwrap();
+        println!("[1] All good!");
+
+        stdout.execute(SetForegroundColor(Color::DarkRed)).unwrap();
+        println!("[2] Let's stop this project!");
+
+        stdout.execute(ResetColor).unwrap();
+
+        let mut human_response: String = String::new();
+        stdin()
+            .read_line(&mut human_response)
+            .expect("Failed to read human response!");
+
+        human_response = human_response.trim().to_lowercase();
+        match human_response.as_str() {
+            "1" | "ok" | "y" => return true,
+            "2" | "no" | "n" => return false,
+            _ => {
+                println!("Invalid input, please select '1' or '2'")
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
