@@ -1,6 +1,10 @@
-use std::process::{Command, Stdio};
+use std::{
+    process::{Command, Stdio},
+    time::Duration,
+};
 
 use async_trait::async_trait;
+use tokio::time;
 
 use crate::{
     ai_functions::aifunc_backend::{
@@ -17,7 +21,7 @@ use crate::{
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
 
-use super::agent_traits::{FactSheet, SpecifalFunctions};
+use super::agent_traits::{FactSheet, RouteObject, SpecifalFunctions};
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -173,7 +177,7 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                         .stdout(Stdio::piped())
                         .stderr(Stdio::piped())
                         .output()
-                        .expect("Failed to run backend application");
+                        .expect("Failed to build backend application");
 
                     if build_backend_server.status.success() {
                         self.bug_count = 0;
@@ -200,6 +204,42 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                         self.attributes.state = AgentState::Working;
                         continue;
                     }
+
+                    // Extract and test API endpoints
+                    let api_endpoints: Vec<RouteObject> =
+                        serde_json::from_str(self.call_extract_rest_api_endpoints().await.as_str())
+                            .expect("Failed to deserialize endpoints into RouteObjects");
+
+                    let static_endpoints = api_endpoints
+                        .iter()
+                        .filter(|&route_object| {
+                            route_object.method == "get" && route_object.is_route_dynamic == "false"
+                        })
+                        .cloned()
+                        .collect::<Vec<RouteObject>>();
+
+                    fact_sheet.api_endpoint_schema = static_endpoints;
+
+                    PrintCommand::UnitTest.print_agent_message(
+                        self.attributes.position.as_str(),
+                        "Backend Code Unit Testing: Starting Web Server...",
+                    );
+
+                    let run_backend_server = Command::new("cargo")
+                        .arg("run")
+                        .current_dir(WS_PROJECT_PATH)
+                        // return information back to us
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::piped())
+                        .output()
+                        .expect("Failed to run backend application");
+
+                    PrintCommand::UnitTest.print_agent_message(
+                        self.attributes.position.as_str(),
+                        "Backend Code Unit Testing: Launching server in 5 seconds...",
+                    );
+
+                    time::sleep(Duration::from_secs(5)).await;
 
                     self.attributes.state = AgentState::Finished;
                 }
