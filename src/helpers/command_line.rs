@@ -10,6 +10,7 @@ use crossterm::{
 
 pub const CODE_TEMPLATE_PATH: &str =
     "/home/vasilegorcinschi/repos/web_template_autogpt/src/code_template.rs";
+pub const WS_PROJECT_PATH: &str = "/home/vasilegorcinschi/repos/web_template_autogpt";
 pub const EXEC_MAIN_PATH: &str = "/home/vasilegorcinschi/repos/web_template_autogpt/src/main.rs";
 const API_SCHEMA_PATH: &str =
     "/home/vasilegorcinschi/repos/auto_gippity_udemy/schemas/api_schema.json";
