@@ -4,6 +4,7 @@ use std::{
 };
 
 use async_trait::async_trait;
+use reqwest::Client;
 use tokio::time;
 
 use crate::{
@@ -13,10 +14,10 @@ use crate::{
     },
     helpers::{
         command_line::{
-            is_code_safe, read_template_contents, save_backend_code, PrintCommand,
-            CODE_TEMPLATE_PATH, EXEC_MAIN_PATH, WS_PROJECT_PATH,
+            is_code_safe, read_template_contents, save_api_endpoints, save_backend_code,
+            PrintCommand, CODE_TEMPLATE_PATH, EXEC_MAIN_PATH, WS_PROJECT_PATH,
         },
-        general::{ai_task_request, ai_task_request_decoded},
+        general::{ai_task_request, ai_task_request_decoded, check_status_code},
     },
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
@@ -205,9 +206,10 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                         continue;
                     }
 
+                    let api_endpoints_str = self.call_extract_rest_api_endpoints().await;
                     // Extract and test API endpoints
                     let api_endpoints: Vec<RouteObject> =
-                        serde_json::from_str(self.call_extract_rest_api_endpoints().await.as_str())
+                        serde_json::from_str(api_endpoints_str.as_str())
                             .expect("Failed to deserialize endpoints into RouteObjects");
 
                     let static_endpoints = api_endpoints
@@ -218,20 +220,20 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                         .cloned()
                         .collect::<Vec<RouteObject>>();
 
-                    fact_sheet.api_endpoint_schema = static_endpoints;
+                    fact_sheet.api_endpoint_schema = static_endpoints.clone();
 
                     PrintCommand::UnitTest.print_agent_message(
                         self.attributes.position.as_str(),
                         "Backend Code Unit Testing: Starting Web Server...",
                     );
 
-                    let run_backend_server = Command::new("cargo")
+                    let mut run_backend_server = Command::new("cargo")
                         .arg("run")
                         .current_dir(WS_PROJECT_PATH)
                         // return information back to us
                         .stdout(Stdio::piped())
                         .stderr(Stdio::piped())
-                        .output()
+                        .spawn()
                         .expect("Failed to run backend application");
 
                     PrintCommand::UnitTest.print_agent_message(
@@ -240,6 +242,54 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                     );
 
                     time::sleep(Duration::from_secs(5)).await;
+
+                    for endpoint in static_endpoints {
+                        let testing_msg = format!("Testing endpoint '{}'...", endpoint.route);
+
+                        PrintCommand::UnitTest.print_agent_message(
+                            self.attributes.position.as_str(),
+                            testing_msg.as_str(),
+                        );
+
+                        let url = format!("http://localhost:8080{}", endpoint.route);
+
+                        let client = Client::builder()
+                            .timeout(Duration::from_secs(5))
+                            .build()
+                            .unwrap();
+
+                        // Print out the result of testing
+                        match check_status_code(&client, &url).await {
+                            Ok(status_code) => {
+                                if status_code != 200 {
+                                    PrintCommand::Issue.print_agent_message(
+                                        self.attributes.position.as_str(),
+                                        format!(
+                                            "WARNING: Failed to call backend url endpoint {} ",
+                                            endpoint.route
+                                        )
+                                        .as_str(),
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                PrintCommand::Issue.print_agent_message(
+                                    self.attributes.position.as_str(),
+                                    format!("Error checking backend {}", e).as_str(),
+                                );
+                            }
+                        }
+                    }
+                    save_api_endpoints(&api_endpoints_str);
+
+                    PrintCommand::UnitTest.print_agent_message(
+                        self.attributes.position.as_str(),
+                        "Backend testing complete...",
+                    );
+
+                    run_backend_server
+                        .kill()
+                        .expect("Failed to kill backend web server");
 
                     self.attributes.state = AgentState::Finished;
                 }
