@@ -5,7 +5,7 @@ use crate::{
         agent_basic::basic_agent::{AgentState, BasicAgent},
         agents::{
             agent_architect::AgentSolutionArchitect,
-            agent_traits::{FactSheet, SpecifalFunctions},
+            agent_traits::{FactSheet, SpecialFunctions},
         },
     },
 };
@@ -14,7 +14,7 @@ use crate::{
 pub struct ManagingAgent {
     attributes: BasicAgent,
     fact_sheet: FactSheet,
-    agents: Vec<Box<dyn SpecifalFunctions>>,
+    agents: Vec<Box<dyn SpecialFunctions>>,
 }
 
 impl ManagingAgent {
@@ -34,7 +34,7 @@ impl ManagingAgent {
         )
         .await;
 
-        let agents: Vec<Box<dyn SpecifalFunctions>> = vec![];
+        let agents: Vec<Box<dyn SpecialFunctions>> = vec![];
 
         let fact_sheet = FactSheet {
             project_description,
@@ -51,7 +51,7 @@ impl ManagingAgent {
         })
     }
 
-    fn add_agent(&mut self, agent: Box<dyn SpecifalFunctions>) {
+    fn add_agent(&mut self, agent: Box<dyn SpecialFunctions>) {
         self.agents.push(agent);
     }
 

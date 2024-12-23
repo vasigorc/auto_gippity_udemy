@@ -29,7 +29,7 @@ pub struct FactSheet {
 }
 
 #[async_trait]
-pub trait SpecifalFunctions: std::fmt::Debug {
+pub trait SpecialFunctions: std::fmt::Debug {
     // Used by the manager to get agents' attributes
     fn get_attributes_from_agent(&self) -> &BasicAgent;
 

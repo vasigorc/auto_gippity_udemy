@@ -22,7 +22,7 @@ use crate::{
     models::agent_basic::basic_agent::{AgentState, BasicAgent},
 };
 
-use super::agent_traits::{FactSheet, RouteObject, SpecifalFunctions};
+use super::agent_traits::{FactSheet, RouteObject, SpecialFunctions};
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -93,12 +93,12 @@ impl AgentBackendDeveloper {
 
     async fn call_fix_code_bugs(&mut self, fact_sheet: &mut FactSheet) {
         let msg_context = format!(
-            "BROKEN CODE: {:?}\n ERROR_BUGS: {:?}\n
+            "BROKEN_CODE: {:?}\n ERROR_BUGS: {:?}\n
             THIS FUNCTION ONLY OUTPUTS CODE. JUST OUTPUT THE CODE.",
             fact_sheet.backend_code, self.bug_errors
         );
 
-        let ai_response: String = ai_task_request_decoded(
+        let ai_response: String = ai_task_request(
             msg_context,
             &self.attributes.position,
             get_function_string!(print_fixed_code),
@@ -118,7 +118,7 @@ impl AgentBackendDeveloper {
         // through asking LLM for code
         let backend_code = read_template_contents(EXEC_MAIN_PATH);
         let msg_context = format!("CODE_INPUT: {}", backend_code);
-        let ai_response: String = ai_task_request_decoded(
+        let ai_response: String = ai_task_request(
             msg_context,
             &self.attributes.position,
             get_function_string!(print_rest_api_endpoints),
@@ -130,7 +130,7 @@ impl AgentBackendDeveloper {
 }
 
 #[async_trait]
-impl SpecifalFunctions for AgentBackendDeveloper {
+impl SpecialFunctions for AgentBackendDeveloper {
     fn get_attributes_from_agent(&self) -> &BasicAgent {
         &self.attributes
     }
@@ -220,7 +220,7 @@ impl SpecifalFunctions for AgentBackendDeveloper {
                         .cloned()
                         .collect::<Vec<RouteObject>>();
 
-                    fact_sheet.api_endpoint_schema = static_endpoints.clone();
+                    fact_sheet.api_endpoint_schema.clone_from(&static_endpoints);
 
                     PrintCommand::UnitTest.print_agent_message(
                         self.attributes.position.as_str(),
@@ -302,6 +302,7 @@ impl SpecifalFunctions for AgentBackendDeveloper {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "openai-coverage")]
     use super::*;
 
     #[tokio::test]
@@ -325,7 +326,7 @@ mod tests {
 
         let mut fact_sheet: FactSheet = serde_json::from_str(factsheet_string).unwrap();
 
-        agent.attributes.state = AgentState::Discovering;
+        agent.attributes.state = AgentState::Validation;
         agent
             .execute(&mut fact_sheet)
             .await

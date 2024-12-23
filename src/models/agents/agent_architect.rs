@@ -11,7 +11,7 @@ use crate::{
 use async_trait::async_trait;
 use reqwest::Client;
 
-use super::agent_traits::{FactSheet, ProjectScope, SpecifalFunctions};
+use super::agent_traits::{FactSheet, ProjectScope, SpecialFunctions};
 
 #[derive(Debug)]
 pub struct AgentSolutionArchitect {
@@ -71,7 +71,7 @@ impl AgentSolutionArchitect {
 }
 
 #[async_trait]
-impl SpecifalFunctions for AgentSolutionArchitect {
+impl SpecialFunctions for AgentSolutionArchitect {
     fn get_attributes_from_agent(&self) -> &BasicAgent {
         &self.attributes
     }
