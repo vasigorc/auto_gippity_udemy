@@ -5,6 +5,7 @@ use crate::{
         agent_basic::basic_agent::{AgentState, BasicAgent},
         agents::{
             agent_architect::AgentSolutionArchitect,
+            agent_backend::AgentBackendDeveloper,
             agent_traits::{FactSheet, SpecialFunctions},
         },
     },
@@ -55,8 +56,11 @@ impl ManagingAgent {
         self.agents.push(agent);
     }
 
+    // consider adding more agents, e.g. FrontendDeveloper, Database etc
+    // as a future enhancement
     fn create_agents(&mut self) {
         self.add_agent(Box::new(AgentSolutionArchitect::new()));
+        self.add_agent(Box::new(AgentBackendDeveloper::new()));
     }
 
     pub async fn execute_project(&mut self) {
