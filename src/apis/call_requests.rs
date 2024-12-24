@@ -75,11 +75,9 @@ mod tests {
 
         match response {
             Ok(content) => {
-                dbg!(content);
                 assert!(true);
             }
             Err(err) => {
-                dbg!(err); // Debug the error to understand the issue
                 assert!(false);
             }
         }

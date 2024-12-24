@@ -8,7 +8,6 @@ use super::command_line::PrintCommand;
 // encourage certain specific output
 pub fn extend_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
     let ai_func_str = ai_func(func_input);
-    dbg!(ai_func_str);
 
     // Extend the string to encourage only printing the output
     let msg: String = format!(

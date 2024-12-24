@@ -35,7 +35,9 @@ This holds the following information:
 
 ## Runbook
 
-Currently you will have to have `rust` installed and run `cargo run` from the root of the project.
+Currently you will have to have `rust` installed and run `cargo run` from the root of the project, or
+you may run `cargo build --release` and run the native binary compiled for your OS' architecture
+like such: `./target/release/auto_gippity_udemy`.
 
 When prompted, describe what is the website that you would like Auto-Gippity to build:
 

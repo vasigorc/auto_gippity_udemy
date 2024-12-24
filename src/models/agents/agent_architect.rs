@@ -167,6 +167,5 @@ mod tests {
 
         assert!(dummy_factsheet.project_scope.is_some());
         assert!(!dummy_factsheet.external_urls.is_empty());
-        dbg!(agent);
     }
 }
